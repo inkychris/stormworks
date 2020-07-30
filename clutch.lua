@@ -1,43 +1,3 @@
-clutch = {
-    value = 0,
-    threshold = property.getNumber("Clutch Threshold")
-}
-
-function clutch:update()
-	output.setNumber(1, self.value)
-end
-
-function clutch:clamp_value()
-    if self.value > 1 then
-        self.value = 1
-    elseif self.value < 0 then
-        self.value = 0
-    end
-end
-
-function clutch:disengage()
-	self.value = 0
-	self:update()
-end
-
-function clutch:increase(value)
-    self.value = self.value + value
-    if self.value < self.threshold then
-        self.value = self.threshold
-    end
-    self:clamp_value()
-    self:update()
-end
-
-function clutch:decrease(value)
-    self.value = self.value - value
-    if self.value < self.threshold then
-        self.value = 0
-    end
-    self:clamp_value()
-    self:update()
-end
-
 NumberValue = {}
 function NumberValue:Create()
     local this = {
@@ -70,14 +30,48 @@ function NumberValue:Create()
     return this
 end
 
+clutch = {
+    value = 0,
+    min_input_rps = property.getNumber("Minimum RPS") * 1.1,
+    threshold = property.getNumber("Clutch Threshold"),
+    increment = property.getNumber("Clutch Engagement Increment"),
+}
+
+function clutch:update()
+	output.setNumber(1, self.value)
+end
+
+function clutch:clamp_value()
+    if self.value > 1 then
+        self.value = 1
+    elseif self.value < 0 then
+        self.value = 0
+    end
+end
+
+function clutch:disengage()
+    self.value = 0
+end
+
+function clutch:adjust(input_rps, target_rate)
+    if (target_rate:is_decrementing() and (input_rps.current_value < self.min_input_rps)) then
+        self:disengage()
+    elseif target_rate:is_incrementing() then
+        if (input_rps:is_incrementing() and (input_rps.current_value > self.min_input_rps)) then
+            self.value = self.value + (math.abs(input_rps.current_value - self.min_input_rps) * self.increment)
+            if self.value < self.threshold then
+                self.value = self.threshold
+            end
+        elseif (input_rps:is_decrementing() or (input_rps.current_value < self.min_input_rps)) then
+            self.value = self.value - (self.increment / (0.000001 + math.abs(input_rps.current_value - self.min_input_rps)))
+        end
+    end
+    self:clamp_value()
+end
+
 engine_rps = NumberValue:Create()
-clutch_rps = NumberValue:Create()
 target_rate = NumberValue:Create()
-min_engine_rps = property.getNumber("Minimum RPS")
-clutch_bite_rps = property.getNumber("Clutch Bitepoint RPS")
 ignition_rps = property.getNumber("Ignition RPS")
-clutch_engagement_p_gain = property.getNumber("Clutch Engagement P Gain")
-clutch_disengagement_p_gain = property.getNumber("Clutch Disengagement P Gain")
 
 function onTick()
     enabled = input.getBool(1)
@@ -85,22 +79,16 @@ function onTick()
     target_rate:set(input.getNumber(2))
 
     if enabled and (engine_rps.current_value < ignition_rps) then
+        clutch:disengage()
         output.setBool(1, true)
     else
         output.setBool(1, false)
     end
 
-	if (not enabled) or (target_rate:is_decrementing() and (engine_rps.current_value < clutch_bite_rps)) then
-		clutch:disengage()
-		return
+	if not enabled then
+        clutch:disengage()
     end
 
-    if target_rate:is_incrementing() then
-        if (engine_rps.current_value > clutch_bite_rps) and (engine_rps:is_incrementing()) then
-            clutch:increase(clutch_engagement_p_gain * (engine_rps.current_value - clutch_bite_rps))
-        elseif (engine_rps.current_value < clutch_bite_rps) then
-            clutch:decrease(clutch_disengagement_p_gain * (clutch_bite_rps - engine_rps.current_value))
-        end
-        return
-    end
+    clutch:adjust(engine_rps, target_rate)
+    clutch:update()
 end
