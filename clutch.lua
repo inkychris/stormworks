@@ -1,3 +1,13 @@
+
+ignition_rps = property.getNumber("Ignition RPS")
+max_gear = property.getNumber("Max Gear")
+max_engine_rps = property.getNumber("Max Engine RPS")
+min_engine_rps = property.getNumber("Minimum RPS")
+shift_up_rps = property.getNumber("Shift-up RPS")
+min_shift_down_rps = property.getNumber("Min Shift-down RPS")
+slow_shift_down_rps = property.getNumber("Slow Shift-down RPS")
+shift_latency = property.getNumber("Shift Latency (ticks)")
+
 NumberValue = {}
 function NumberValue:Create()
 	local this = {
@@ -32,7 +42,7 @@ end
 
 clutch = {
 	value = 0,
-	min_input_rps = property.getNumber("Minimum RPS") * 1.1,
+	min_input_rps = min_engine_rps * 1.1,
 	threshold = property.getNumber("Clutch Threshold"),
 	increment = property.getNumber("Clutch Engagement Increment"),
 }
@@ -50,20 +60,21 @@ function clutch:clamp_value()
 end
 
 function clutch:disengage()
-		self.value = 0
+	self.value = 0
 end
 
 function clutch:adjust(input_rps, target_rate)
-	if (target_rate:is_decrementing() and (input_rps.current_value < self.min_input_rps)) then
-		self:disengage()
-	elseif target_rate:is_incrementing() then
-		if (input_rps:is_incrementing() and (input_rps.current_value > self.min_input_rps)) then
-			self.value = self.value + (math.abs(input_rps.current_value - self.min_input_rps) * self.increment)
-			if self.value < self.threshold then
-				self.value = self.threshold
-			end
-		elseif (input_rps:is_decrementing() or (input_rps.current_value < self.min_input_rps)) then
+	below_min = input_rps.current_value < self.min_input_rps
+	if target_rate:is_incrementing() then
+		if below_min then
 			self.value = self.value - (self.increment / (0.000001 + math.abs(input_rps.current_value - self.min_input_rps)))
+		else
+			self.value = self.value + (math.abs(input_rps.current_value - self.min_input_rps) * self.increment)
+		end
+
+	elseif target_rate:is_decrementing() then
+		if below_min then
+			self:disengage()
 		end
 	end
 	self:clamp_value()
@@ -71,11 +82,24 @@ end
 
 engine_rps = NumberValue:Create()
 target_rate = NumberValue:Create()
-ignition_rps = property.getNumber("Ignition RPS")
-max_gear = property.getNumber("Max Gear")
+gear = 0
+
+function set_gear(value)
+	gear = value
+	if gear < -1 then
+		gear = -1
+	elseif gear > max_gear then
+		gear = max_gear
+	end
+	output.setNumber(2, gear)
+end
+
+ticks_since_last_gear_shift = 0
+previous_reverse = false
 
 function onTick()
 	enabled = input.getBool(1)
+	reverse = input.getBool(2)
 	engine_rps:set(input.getNumber(1))
 	target_rate:set(input.getNumber(2))
 
@@ -90,6 +114,31 @@ function onTick()
 		clutch:disengage()
 	end
 
+	if reverse ~= previous_reverse then
+		clutch:disengage()
+		target_rate:set(0)
+		gear = 0
+	end
+
 	clutch:adjust(engine_rps, target_rate)
 	clutch:update()
+
+	if (ticks_since_last_gear_shift > shift_latency) and 
+			target_rate:is_incrementing() and 
+			engine_rps:is_incrementing() and 
+			(engine_rps.current_value > shift_up_rps) then
+		ticks_since_last_gear_shift = 0
+		set_gear(gear + 1)
+	elseif (gear > 0) and
+		(ticks_since_last_gear_shift > shift_latency) and
+			(
+				(engine_rps.current_value < min_shift_down_rps) or
+				(engine_rps.current_value < slow_shift_down_rps and target_rate:is_decrementing())
+			) then
+		ticks_since_last_gear_shift = 0
+		set_gear(gear - 1)
+	end
+
+	ticks_since_last_gear_shift = ticks_since_last_gear_shift + 1
+	previous_reverse = reverse
 end
