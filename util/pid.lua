@@ -1,4 +1,7 @@
 -- source https://gist.github.com/bradley219/5373998
+
+-- clamp
+
 PID = {}
 function PID:Create()
 	local this = {
@@ -19,10 +22,8 @@ function PID:Create()
         i_out = self.kI * self._integral
         d_out = self.kD * ((err - self._previous_err) * 60)
         result = p_out + i_out + d_out
-        if self.clamp and (result > self.max) then
-            result = self.max
-        elseif self.clamp and (result < self.min) then
-            result = self.min
+        if self.clamp then
+            result = clamp(result, self.min, self.max)
         end
         self._previous_err = err
         return result
