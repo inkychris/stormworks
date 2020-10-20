@@ -2,7 +2,6 @@
 PID = {}
 function PID:Create()
 	local this = {
-		interval = 1/60,
 		kP = 0,
 		kI = 0,
         kD = 0,
@@ -16,9 +15,9 @@ function PID:Create()
     function this:process(setpoint, pv)
         err = setpoint - pv
         p_out = self.kP * err
-        self._integral = self._integral + err * self.interval
+        self._integral = self._integral + err / 60
         i_out = self.kI * self._integral
-        d_out = self.kD * ((err - self._previous_err) / self.interval)
+        d_out = self.kD * ((err - self._previous_err) * 60)
         result = p_out + i_out + d_out
         if self.clamp and (result > self.max) then
             result = self.max
