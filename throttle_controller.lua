@@ -2,8 +2,8 @@
 -- Variable
 
 function log(index, value)
-    target = string.format("/log?index=%i&value=%s", index, tostring(value))
-    async.httpGet(8000, target)
+	target = string.format("/log?index=%i&value=%s", index, tostring(value))
+	async.httpGet(8000, target)
 end
 
 idler_pid = PID:Create()
@@ -26,41 +26,41 @@ limiter_enabled = false
 tick = 0
 
 function onTick()
-    tick = tick + 1
-    engine_rps:set(input.getNumber(1))
-    target_rate:set(input.getNumber(2))
-    local ecu_enabled = input.getBool(1)
+	tick = tick + 1
+	engine_rps:set(input.getNumber(1))
+	target_rate:set(input.getNumber(2))
+	local ecu_enabled = input.getBool(1)
 
-    local throttle = target_rate.current
+	local throttle = target_rate.current
 
-    if not ecu_enabled then
-        idler_enabled = false
-        limiter_enabled = false
-    end
+	if not ecu_enabled then
+		idler_enabled = false
+		limiter_enabled = false
+	end
 
-    if ecu_enabled then
-        if engine_rps.current < min_rps then
-            idler_enabled = true
-        elseif engine_rps.current > max_rps then
-            limiter_enabled = true
-        end
-    end
+	if ecu_enabled then
+		if engine_rps.current < min_rps then
+			idler_enabled = true
+		elseif engine_rps.current > max_rps then
+			limiter_enabled = true
+		end
+	end
 
-    if idler_enabled then
-        throttle = idler_pid:process(min_rps, engine_rps.current)
-        if target_rate.current > throttle then
-            idler_enabled = false
-        end
-        log(tick, engine_rps.current)
-    end
+	if idler_enabled then
+		throttle = idler_pid:process(min_rps, engine_rps.current)
+		if target_rate.current > throttle then
+			idler_enabled = false
+		end
+		log(tick, engine_rps.current)
+	end
 
-    if limiter_enabled then
-        throttle = limiter_pid:process(max_rps, engine_rps.current)
-        if target_rate.current < throttle then
-            limiter_enabled = false
-        end
-        log(tick, engine_rps.current)
-    end
+	if limiter_enabled then
+		throttle = limiter_pid:process(max_rps, engine_rps.current)
+		if target_rate.current < throttle then
+			limiter_enabled = false
+		end
+		log(tick, engine_rps.current)
+	end
 
-    output.setNumber(1, throttle)
+	output.setNumber(1, throttle)
 end
