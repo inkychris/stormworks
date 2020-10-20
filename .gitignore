@@ -1,2 +1,4 @@
 .*/
 telemetry/data/
+
+__pycache__/
