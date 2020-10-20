@@ -11,6 +11,9 @@ function PID:Create()
 		clamp_ouput = false,
 		min = 0,
 		max = 1,
+		clamp_integral = false,
+		integral_min = -1,
+		integral_max = 1,
 		_previous_err = 0,
 		_integral = 0
 	}
@@ -19,6 +22,9 @@ function PID:Create()
 		err = setpoint - pv
 		p_out = self.kP * err
 		self._integral = self._integral + err / 60
+		if clamp_integral then
+			self._integral = clamp(self._integral, self.integral_min, self.integral_max)
+		end
 		i_out = self.kI * self._integral
 		d_out = self.kD * ((err - self._previous_err) * 60)
 		result = p_out + i_out + d_out
