@@ -4,8 +4,9 @@ gearbox = {}
 function gearbox:Create(max_gear)
 	local this = {
 		gear = 0,
+		_previous_gear = 0,
 		max_gear = max_gear,
-		_anti_repeat_ticks = 120,
+		_anti_repeat_ticks = 80,
 		_shift_timer = nil,
 		shift_up_rps = 10,
 		min_rps = 4,
@@ -21,29 +22,27 @@ function gearbox:Create(max_gear)
 		end
 	end
 
-	function this:reset()
-		self.gear = 0
+	function this:_shift(val)
+		self._previous_gear = self.gear
+		self.gear = clamp(self.gear + val, 0, self.max_gear)
+		if self._previous_gear ~= self.gear then
+			self._shift_timer = 0
+		end
 	end
 
-	function this:shift_up()
-		self.gear = clamp(self.gear + 1, 0, self.max_gear)
-		self._shift_timer = 0
-	end
-
-	function this:shift_down()
-		self.gear = clamp(self.gear - 1, 0, self.max_gear)
-		self._shift_timer = 0
-	end
+	function this:reset() self:shift(-self.max_gear) end
+	function this:shift_up() self:_shift(1) end
+	function this:shift_down() self:_shift(-1) end
 
 	function this:process(input_rps, target_rate)
-		if input_rps.current < self.min_rps then
+		if self._shift_timer then return self.gear end
+
+		if target_rate:is_incrementing() and (input_rps.current > self.shift_up_rps) then
+			self:shift_up()
+		elseif
+		(input_rps.current < self.min_rps) or
+		(target_rate:is_decrementing() and (input_rps.current < self.shift_down_rps)) then
 			self:shift_down()
-		elseif not self._shift_timer then
-			if target_rate:is_increasing() and (input_rps.current > self.shift_up_rps) then
-				self:shift_up()
-			elseif target_rate:is_decreasing() and (input_rps.current < self.shift_down_rps) then
-				self:shift_down()
-			end
 		end
 		return self.gear
 	end
