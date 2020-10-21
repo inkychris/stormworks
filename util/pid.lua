@@ -19,15 +19,15 @@ function PID:Create()
 	}
 
 	function this:process(setpoint, pv)
-		err = setpoint - pv
-		p_out = self.kP * err
+		local err = setpoint - pv
+		local p_out = self.kP * err
 		self._integral = self._integral + err / 60
-		if clamp_integral then
+		if self.clamp_integral then
 			self._integral = clamp(self._integral, self.integral_min, self.integral_max)
 		end
-		i_out = self.kI * self._integral
-		d_out = self.kD * ((err - self._previous_err) * 60)
-		result = p_out + i_out + d_out
+		local i_out = self.kI * self._integral
+		local d_out = self.kD * ((err - self._previous_err) * 60)
+		local result = p_out + i_out + d_out
 		if self.clamp then
 			result = clamp(result, self.min, self.max)
 		end
