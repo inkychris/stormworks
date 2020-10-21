@@ -12,7 +12,7 @@ function clutch:Create(min_rps, increment)
 		self.value = 0
 	end
 
-	function clutch:adjust(input_rps, target_rate)
+	function clutch:process(input_rps, target_rate)
 		local below_min = input_rps.current_value < self.min_rps
 		if target_rate:is_incrementing() then
 			local increment_value = math.abs(input_rps.current_value - self.min_rps) * self.increment
