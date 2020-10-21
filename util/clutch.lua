@@ -27,6 +27,7 @@ function clutch:Create(min_rps, increment)
 			end
 		end
 		self.value = clamp(self.value, 0 , 1)
+		return self.value
 	end
 
 	return this
