@@ -23,6 +23,7 @@ max_rps = property.getNumber("Max Engine RPS")
 
 idler_enabled = false
 limiter_enabled = false
+limiter_enable_target_rate = 0
 tick = 0
 
 function onTick()
@@ -43,6 +44,7 @@ function onTick()
 			idler_enabled = true
 		elseif engine_rps.current > max_rps then
 			limiter_enabled = true
+			limiter_enable_target_rate = target_rate.current
 		end
 	end
 
@@ -56,7 +58,7 @@ function onTick()
 
 	if limiter_enabled then
 		throttle = limiter_pid:process(max_rps, engine_rps.current)
-		if target_rate.current < throttle then
+		if target_rate.current < limiter_enable_target_rate then
 			limiter_enabled = false
 		end
 		log(tick, engine_rps.current)
