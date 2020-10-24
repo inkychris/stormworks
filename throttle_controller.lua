@@ -24,6 +24,8 @@ max_rps = property.getNumber("Max Engine RPS")
 idler_enabled = false
 limiter_enabled = false
 limiter_enable_target_rate = 0
+limiter_antirepeat = nil
+
 tick = 0
 
 function onTick()
@@ -34,6 +36,13 @@ function onTick()
 
 	local throttle = target_rate.current
 
+	if limiter_antirepeat then
+		limiter_antirepeat = limiter_antirepeat + 1
+		if limiter_antirepeat > 20 then
+			limiter_antirepeat = nil
+		end
+	end
+
 	if not ecu_enabled then
 		idler_enabled = false
 		limiter_enabled = false
@@ -42,8 +51,9 @@ function onTick()
 	if ecu_enabled then
 		if engine_rps.current < min_rps then
 			idler_enabled = true
-		elseif engine_rps.current > max_rps then
+		elseif not limiter_antirepeat and (engine_rps.current > max_rps) then
 			limiter_enabled = true
+			limiter_antirepeat = 0
 			limiter_enable_target_rate = target_rate.current
 		end
 	end
