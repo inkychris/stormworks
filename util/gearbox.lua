@@ -8,6 +8,7 @@ function Gearbox:Create(max_gear)
 		max_gear = max_gear,
 		anti_repeat_ticks = 80,
 		_shift_timer = nil,
+		allow_upshift = true,
 		shift_up_rps = 10,
 		min_rps = 4,
 		shift_down_rps = 6,
@@ -37,7 +38,7 @@ function Gearbox:Create(max_gear)
 	function this:process(input_rps, target_rate)
 		if self._shift_timer then return self.gear end
 
-		if target_rate:is_incrementing() and (input_rps.current > self.shift_up_rps) then
+		if self.allow_upshift and target_rate:is_incrementing() and (input_rps.current > self.shift_up_rps) then
 			self:shift_up()
 		elseif
 		(input_rps.current < self.min_rps) or
