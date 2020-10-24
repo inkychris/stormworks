@@ -15,6 +15,7 @@ limiter_pid = PID:Create()
 limiter_pid.kP = property.getNumber("Limiter PID (P)")
 limiter_pid.kI = property.getNumber("Limiter PID (I)")
 limiter_pid.kD = property.getNumber("Limiter PID (D)")
+limiter_pid.clamp_integral = true
 
 target_rate = Variable:Create()
 engine_rps = Variable:Create()
