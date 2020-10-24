@@ -6,7 +6,7 @@ function gearbox:Create(max_gear)
 		gear = 0,
 		_previous_gear = 0,
 		max_gear = max_gear,
-		_anti_repeat_ticks = 80,
+		anti_repeat_ticks = 80,
 		_shift_timer = nil,
 		shift_up_rps = 10,
 		min_rps = 4,
@@ -16,7 +16,7 @@ function gearbox:Create(max_gear)
 	function this:tick()
 		if self._shift_timer then
 			self._shift_timer = self._shift_timer + 1
-			if self._shift_timer > self._anti_repeat_ticks then
+			if self._shift_timer > self.anti_repeat_ticks then
 				self._shift_timer = nil
 			end
 		end
