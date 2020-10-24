@@ -1,7 +1,7 @@
 -- clamp
 
-gearbox = {}
-function gearbox:Create(max_gear)
+Gearbox = {}
+function Gearbox:Create(max_gear)
 	local this = {
 		gear = 0,
 		_previous_gear = 0,
