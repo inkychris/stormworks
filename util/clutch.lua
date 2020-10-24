@@ -1,25 +1,25 @@
 -- clamp
 
-clutch = {}
-function clutch:Create(min_rps, increment)
+Clutch = {}
+function Clutch:Create(min_rps, increment)
 	local this = {
 		value = 0,
 		min_rps = min_rps,
 		increment = increment,
 	}
 
-	function clutch:reset()
+	function this:reset()
 		self.value = 0
 	end
 
-	function clutch:process(input_rps, target_rate)
-		local below_min = input_rps.current_value < self.min_rps
+	function this:process(input_rps, target_rate)
+		local below_min = input_rps.current < self.min_rps
 		if target_rate:is_incrementing() then
-			local increment_value = math.abs(input_rps.current_value - self.min_rps) * self.increment
+			local increment = math.abs(input_rps.current - self.min_rps) * self.increment
 			if below_min then
-				self.value = self.value - increment_value
+				self.value = self.value - increment
 			else
-				self.value = self.value + increment_value
+				self.value = self.value + increment
 			end
 		elseif target_rate:is_decrementing() then
 			if below_min then
