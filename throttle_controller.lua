@@ -1,11 +1,6 @@
 -- PID
 -- Variable
 
-function log(index, value)
-	target = string.format("/log?index=%i&value=%s", index, tostring(value))
-	async.httpGet(8000, target)
-end
-
 idler_pid = PID:Create()
 idler_pid.kP = property.getNumber("Idler PID (P)")
 idler_pid.kI = property.getNumber("Idler PID (I)")
@@ -21,6 +16,7 @@ target_rate = Variable:Create()
 engine_rps = Variable:Create()
 min_rps = property.getNumber("Min Engine RPS")
 max_rps = property.getNumber("Max Engine RPS")
+max_engine_temp = property.getNumber("Max Engine Temp")
 
 idler_enabled = false
 limiter_enabled = false
@@ -34,6 +30,7 @@ function onTick()
 	engine_rps:set(input.getNumber(1))
 	target_rate:set(input.getNumber(2))
 	local ecu_enabled = input.getBool(1)
+	local engine_temp = input.getNumber(3)
 
 	local throttle = target_rate.current
 
@@ -65,7 +62,6 @@ function onTick()
 		if target_rate.current > throttle then
 			idler_enabled = false
 		end
-		log(tick, engine_rps.current)
 	end
 
 	if limiter_enabled then
@@ -73,7 +69,10 @@ function onTick()
 		if target_rate.current < limiter_enable_target_rate then
 			limiter_enabled = false
 		end
-		log(tick, engine_rps.current)
+	end
+
+	if engine_temp > max_engine_temp then
+		throttle = 0
 	end
 
 	output.setNumber(1, throttle)
