@@ -23,10 +23,7 @@ limiter_enabled = false
 limiter_enable_target_rate = 0
 limiter_antirepeat = nil
 
-tick = 0
-
 function onTick()
-	tick = tick + 1
 	engine_rps:set(input.getNumber(1))
 	target_rate:set(input.getNumber(2))
 	local ecu_enabled = input.getBool(1)
