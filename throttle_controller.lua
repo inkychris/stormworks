@@ -47,6 +47,7 @@ function onTick()
 	if not ecu_enabled then
 		idler_enabled = false
 		limiter_enabled = false
+		throttle = 0
 	end
 
 	if ecu_enabled then
