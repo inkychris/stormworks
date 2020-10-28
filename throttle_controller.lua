@@ -14,9 +14,10 @@ limiter_pid.clamp_integral = true
 
 target_rate = Variable:Create()
 engine_rps = Variable:Create()
-max_reverse_throttle = property.getNumber("Max Reverse Throttle")
 min_rps = property.getNumber("Min Engine RPS")
 max_rps = property.getNumber("Max Engine RPS")
+max_reverse_rps = property.getNumber("Max Reverse Engine RPS")
+current_max_rps = max_rps
 max_engine_temp = property.getNumber("Max Engine Temp")
 
 idler_enabled = false
@@ -48,7 +49,7 @@ function onTick()
 	if ecu_enabled then
 		if engine_rps.current < min_rps then
 			idler_enabled = true
-		elseif not limiter_antirepeat and (engine_rps.current > max_rps) then
+		elseif not limiter_antirepeat and (engine_rps.current > current_max_rps) then
 			limiter_enabled = true
 			limiter_antirepeat = 0
 			limiter_enable_target_rate = target_rate.current
@@ -63,7 +64,7 @@ function onTick()
 	end
 
 	if limiter_enabled then
-		throttle = limiter_pid:process(max_rps, engine_rps.current)
+		throttle = limiter_pid:process(current_max_rps, engine_rps.current)
 		if target_rate.current < limiter_enable_target_rate then
 			limiter_enabled = false
 		end
@@ -81,8 +82,10 @@ function onTick()
 	end
 
 	local reverse = input.getBool(2)
-	if reverse and not idler_enabled then
-		throttle = throttle * max_reverse_throttle
+	if reverse then
+		current_max_rps = max_reverse_rps
+	else
+		current_max_rps = max_rps
 	end
 
 	output.setNumber(1, throttle)
