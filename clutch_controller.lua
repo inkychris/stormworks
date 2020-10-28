@@ -1,9 +1,17 @@
--- clutch
+-- Variable
+-- PID
 
-min_rps = property.getNumber("Min Engine RPS")
-clutch_increment = property.getNumber("Clutch Increment")
+clutch_rps = property.getNumber("Clutch RPS")
 
-clutch = Clutch:Create(min_rps, clutch_increment)
+clutch_pid = PID:Create()
+clutch_pid.clamp_output = true
+clutch_pid.min = -1
+clutch_pid.max = 0
+clutch_pid.clamp_integral = true
+clutch_pid.kP = property.getNumber("Clutch PID (P)")
+clutch_pid.kI = property.getNumber("Clutch PID (I)")
+clutch_pid.kD = property.getNumber("Clutch PID (D)")
+
 engine_rps = Variable:Create()
 target_rate = Variable:Create()
 
@@ -12,15 +20,9 @@ function onTick()
 	engine_rps:set(input.getNumber(1))
 	target_rate:set(input.getNumber(2))
 
-	if not enabled then
-		clutch.value = 0
-		return
+	if not enabled or target_rate.current == 0 then
+		output.setNumber(1, 0)
+	else
+		output.setNumber(1, -clutch_pid:process(clutch_rps, engine_rps.current))
 	end
-
-	if enabled and (engine_rps.current < min_rps) then
-		clutch.value = 0
-	end
-
-	clutch:process(engine_rps, target_rate)
-	output.setNumber(1, clutch.value)
 end
