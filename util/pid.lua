@@ -8,7 +8,7 @@ function PID:Create()
 		kP = 0,
 		kI = 0,
 		kD = 0,
-		clamp_ouput = false,
+		clamp_output = false,
 		min = 0,
 		max = 1,
 		clamp_integral = false,
@@ -28,7 +28,7 @@ function PID:Create()
 		local i_out = self.kI * self._integral
 		local d_out = self.kD * ((err - self._previous_err) * 60)
 		local result = p_out + i_out + d_out
-		if self.clamp then
+		if self.clamp_output then
 			result = clamp(result, self.min, self.max)
 		end
 		self._previous_err = err
