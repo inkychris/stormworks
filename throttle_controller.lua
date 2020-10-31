@@ -26,27 +26,28 @@ limiter_enable_target_rate = 0
 limiter_antirepeat = nil
 thermal_protect = false
 
+engine_rps_channel = property.getNumber("Engine RPS Channel (Number)")
+target_rate_channel = property.getNumber("Target Rate Channel (Number)")
+throttle_channel = property.getNumber("Throttle Channel (Number)")
+engine_temp_channel = property.getNumber("Engine Temp Channel (Number)")
+
+enabled_channel = property.getNumber("Enabled Channel (Bool)")
+reverse_channel = property.getNumber("Reverse Channel (Bool)")
+therm_reset_channel = property.getNumber("Thermal Reset Channel (Bool)")
+therm_protect_channel = property.getNumber("Thermal Protect Enabled Channel (Bool)")
+
 function onTick()
-	engine_rps:set(input.getNumber(1))
-	target_rate:set(input.getNumber(2))
+	engine_rps:set(input.getNumber(engine_rps_channel))
+	target_rate:set(input.getNumber(target_rate_channel))
 
 	local throttle = target_rate.current
-
 	if limiter_antirepeat then
 		limiter_antirepeat = limiter_antirepeat + 1
 		if limiter_antirepeat > 20 then
 			limiter_antirepeat = nil
 		end
 	end
-
-	local ecu_enabled = input.getBool(1)
-	if not ecu_enabled then
-		idler_enabled = false
-		limiter_enabled = false
-		throttle = 0
-	end
-
-	if ecu_enabled then
+	if input.getBool(enabled_channel) then
 		if engine_rps.current < min_rps then
 			idler_enabled = true
 		elseif not limiter_antirepeat and (engine_rps.current > current_max_rps) then
@@ -54,40 +55,35 @@ function onTick()
 			limiter_antirepeat = 0
 			limiter_enable_target_rate = target_rate.current
 		end
+	else
+		idler_enabled = false
+		limiter_enabled = false
+		throttle = 0
 	end
-
 	if idler_enabled then
 		throttle = idler_pid:process(min_rps, engine_rps.current)
 		if target_rate.current > throttle then
 			idler_enabled = false
 		end
 	end
-
 	if limiter_enabled then
 		throttle = limiter_pid:process(current_max_rps, engine_rps.current)
 		if target_rate.current < limiter_enable_target_rate then
 			limiter_enabled = false
 		end
 	end
-
-	local engine_temp = input.getNumber(3)
-	if thermal_protect or engine_temp > max_engine_temp then
+	if thermal_protect or input.getNumber(engine_temp_channel) > max_engine_temp then
 		throttle = 0
 		thermal_protect = true
 	end
-
-	local thermal_reset = input.getBool(3)
-	if thermal_reset then
+	if input.getBool(therm_reset_channel) then
 		thermal_protect = false
 	end
-
-	local reverse = input.getBool(2)
-	if reverse then
+	if input.getBool(reverse_channel) then
 		current_max_rps = max_reverse_rps
 	else
 		current_max_rps = max_rps
 	end
-
-	output.setNumber(1, throttle)
-	output.setBool(16, thermal_protect)
+	output.setNumber(throttle_channel, throttle)
+	output.setBool(therm_protect_channel, thermal_protect)
 end
