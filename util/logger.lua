@@ -15,6 +15,10 @@ function Logger:Create()
 			self:send()
 		end
 	end
+	function this:reset()
+		self:send()
+		if #self._data > 0 then self._data = {} end
+	end
 	function this:send()
 		if #self._data == 0 then return end
     	async.httpGet(self.port, string.format("/log?packet=%s", table.concat(self._data, "|")))
