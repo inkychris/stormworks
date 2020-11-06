@@ -1,21 +1,22 @@
--- Variable
-
-engine_rps = Variable:Create()
 ignition_rps = property.getNumber("Ignition RPS")
 
-engine_rps_channel = property.getNumber("Engine RPS Channel (Number)")
-therm_protect_channel = property.getNumber("Thermal Protect Enabled Channel (Bool)")
-enabled_channel = property.getNumber("Enabled Channel (Bool)")
-starter_channel = property.getNumber("Starter Channel (Bool)")
+channel = {
+	engine_rps = 1,
+	enabled = 1,
+	starter = 2,
+	thermal_protect = 5,
+}
 
 function onTick()
-	local enabled = input.getBool(enabled_channel)
-	local thermal_protect = input.getBool(therm_protect_channel)
-	engine_rps:set(input.getNumber(engine_rps_channel))
+	for i=1,32 do output.setNumber(i,input.getNumber(i)); output.setBool(i,input.getBool(i)) end
 
-	if not thermal_protect and enabled and engine_rps.current < ignition_rps then
-		output.setBool(starter_channel, true)
+	local enabled = input.getBool(channel.enabled)
+	local thermal_protect = input.getBool(channel.thermal_protect)
+	local engine_rps = input.getNumber(channel.engine_rps)
+
+	if not thermal_protect and enabled and engine_rps < ignition_rps then
+		output.setBool(channel.starter, true)
 	else
-		output.setBool(starter_channel, false)
+		output.setBool(channel.starter, false)
 	end
 end
