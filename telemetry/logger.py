@@ -15,21 +15,24 @@ class Logger:
         self._output_dir = day_dir / str(instance_index)
         self._dataset_timeout = datetime.timedelta(seconds=dataset_timeout)
         self._last_logged = None
+        self._dumped_latest = False
         self._auto_dump = True
         self._dump_thread = None
         self._instance_index = 0
 
     def dump_reset_on_timeout(self):
         now = datetime.datetime.now()
-        if self._last_logged and self._last_logged + self._dataset_timeout < now:
+        if not self._dumped_latest and self._last_logged  and self._last_logged + self._dataset_timeout < now:
             self.dump()
             self.reset()
+            self._dumped_latest = True
 
     def reset(self):
         self._instance_index += 1
         self._data = []
 
     def log(self, packet):
+        self._dumped_latest = False
         for entry in packet.split('|'):
             self._data.append(entry.split(':'))
         self._last_logged = datetime.datetime.now()
@@ -43,7 +46,6 @@ class Logger:
             writer.writerow(['index', 'value'])
             for entry in self._data:
                 writer.writerow(entry)
-        self._dump_count += 1
 
     def __enter__(self):
         return self
