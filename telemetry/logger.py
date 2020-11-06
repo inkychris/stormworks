@@ -6,14 +6,18 @@ import threading
 
 
 class Logger:
-    def __init__(self, *, dataset_timeout, output_dir=None):
+    def __init__(self, *, dataset_timeout):
         self._data = []
-        self._output_dir = pathlib.Path(output_dir or 'data') / datetime.datetime.now().isoformat().replace(':', '-').replace('.', '-')
+        day_dir = pathlib.Path('data') / datetime.datetime.now().strftime('%Y-%m-%d')
+        instance_index = max((int(file.stem) for file in day_dir.glob('*')), default=0)
+        if any((day_dir / str(instance_index)).glob('*.csv')):
+            instance_index += 1
+        self._output_dir = day_dir / str(instance_index)
         self._dataset_timeout = datetime.timedelta(seconds=dataset_timeout)
         self._last_logged = None
         self._auto_dump = True
         self._dump_thread = None
-        self._dump_count = 0
+        self._instance_index = 0
 
     def dump_reset_on_timeout(self):
         now = datetime.datetime.now()
@@ -22,6 +26,7 @@ class Logger:
             self.reset()
 
     def reset(self):
+        self._instance_index += 1
         self._data = []
 
     def log(self, packet):
@@ -33,7 +38,7 @@ class Logger:
         if not self._data:
             return
         self._output_dir.mkdir(exist_ok=True, parents=True)
-        with open(self._output_dir / f'{self._dump_count}.csv', 'w', newline='') as csvfile:
+        with open(self._output_dir / f'{self._instance_index}.csv', 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(['index', 'value'])
             for entry in self._data:
