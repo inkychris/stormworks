@@ -15,6 +15,10 @@ function FIFO:Create(size)
 		if i == 0 then return nil end
 		return self:get(self.size + i + 1)
 	end
+	function this:average()
+		local result = 0
+		for i=1,self.size do result = result + self:get(i) end
+		return result / self.size
 	end
 	return this
 end
