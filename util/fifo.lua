@@ -11,8 +11,10 @@ function FIFO:Create(size)
 		self._data[self._i] = val
 	end
 	function this:get(i)
-		return self._data[(self._i+i-1) % self.size + 1]
+		if i > 0 then return self._data[(self._i+i-1) % self.size + 1] end
+		if i == 0 then return nil end
+		return self:get(self.size + i + 1)
 	end
-	function this:last() return self:get(self.size) end
+	end
 	return this
 end
