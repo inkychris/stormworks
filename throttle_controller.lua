@@ -22,14 +22,13 @@ thermal_protect = false
 channel = {
 	engine_rps = 1,
 	target_rate = 2,
-	throttle = 3,
-	engine_temp = 5,
-	target_rps = 8,
+	engine_temp = 3,
+	throttle = 1,
 	--
 	enabled = 1,
-	reverse = 3,
-	thermal_reset = 4,
-	thermal_protect = 5,
+	reverse = 2,
+	thermal_protect = 4,
+	thermal_reset = 1,
 }
 
 function onTick()
@@ -61,6 +60,5 @@ function onTick()
 		current_max_rps = max_rps
 	end
 	output.setNumber(channel.throttle, throttle)
-	output.setNumber(channel.target_rps, target_rps)
 	output.setBool(channel.thermal_protect, thermal_protect)
 end
