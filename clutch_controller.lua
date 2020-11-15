@@ -1,6 +1,8 @@
 -- PID
+-- clamp
 
-clutch_rps = property.getNumber("Clutch RPS")
+min_rps = property.getNumber("Min RPS")
+clutch_range = property.getNumber("Clutch Range (RPS)")
 
 clutch_pid = PID:Create{
 	kP = property.getNumber("Clutch PID (P)"),
@@ -8,16 +10,40 @@ clutch_pid = PID:Create{
 	kD = property.getNumber("Clutch PID (D)")
 }
 
+Channel = {
+	In = {
+		Bool = {Enabled = 1, Reverse = 2},
+		Num = {InputRPS = 1, OutputRPS = 2, TargetRate = 3}
+	},
+	Out = {
+		Num = {Clutch = 1},
+	}
+}
+
+function reset()
+	clutch_pid:reset()
+	output.setNumber(Channel.Out.Num.Clutch, 0)
+end
+
+reverse_previous = false
+changing_direction = false
 function onTick()
-	for i=1,32 do output.setNumber(i,input.getNumber(i)); output.setBool(i,input.getBool(i)) end
+	local enabled = input.getBool(Channel.In.Bool.Enabled)
+	local reverse = input.getBool(Channel.In.Bool.Reverse)
+	local input_rps = input.getNumber(Channel.In.Num.InputRPS)
+	local output_rps = input.getNumber(Channel.In.Num.OutputRPS)
+	local target_rate = input.getNumber(Channel.In.Num.TargetRate)
 
-	local enabled = input.getBool(1)
-	local engine_rps = input.getNumber(1)
-	local target_rate = input.getNumber(2)
-
-	if (not enabled) or (target_rate == 0) then
-		output.setNumber(4, 0)
-	else
-		output.setNumber(4, clutch_pid:process(engine_rps, clutch_rps))
+	if reverse ~= reverse_previous then changing_direction = true end
+	changing_direction = changing_direction and (output_rps ~= 0)
+	if changing_direction then
+		reset()
+		return
 	end
+
+	if target_rate > 0 and enabled then
+		local offset = min_rps * (clutch_range - clamp(input_rps - min_rps, 0, clutch_range)) / clutch_range
+		output.setNumber(Channel.Out.Num.Clutch, clutch_pid:process(input_rps, output_rps + offset))
+	else reset() end
+	reverse_previous = reverse
 end
