@@ -13,31 +13,37 @@ function __print_table(label, table)
     io.write("\n")
 end
 
-function __init_io_mock(label, table)
+function __assert_num(val) assert(tonumber(val), "value is not a number!") end
+function __assert_str(val) assert(tostring(val), "value is not a string!") end
+
+function __init_io_mock(label, table, key_assert)
     table.bool = {}
     table.number = {}
     for i=1,32 do
         table.bool[i] = false
         table.number[i] = 0
     end
-    function _assert_num(val) assert(tonumber(val), "value is not a number!") end
-    function table.getBool(chan)
-        return table.bool[chan]
+    function table.getBool(key)
+        key_assert(key)
+        return table.bool[key]
     end
-    function table.setBool(chan, val)
-        table.bool[chan] = val
+    function table.setBool(key, val)
+        key_assert(key)
+        table.bool[key] = val
     end
-    function table.getNumber(chan)
-        return table.number[chan]
+    function table.getNumber(key)
+        key_assert(key)
+        return table.number[key]
     end
-    function table.setNumber(chan, val)
-        assert(tonumber(val), "value is not a number!")
-        table.number[chan] = val
+    function table.setNumber(key, val)
+        key_assert(key)
+        __assert_num(val)
+        table.number[key] = val
     end
     function table.printBool() __print_table(label, table.bool) end
     function table.printNumber() __print_table(label, table.number) end
 end
 
-__init_io_mock("input", input)
-__init_io_mock("output", output)
-__init_io_mock("property", property)
+__init_io_mock("input", input, __assert_num)
+__init_io_mock("output", output, __assert_num)
+__init_io_mock("property", property, __assert_str)
