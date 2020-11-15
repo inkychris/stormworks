@@ -9,6 +9,10 @@ function PID:Create(t)
 		_previous_err = 0,
 		_integral = 0
 	}
+	function this:reset()
+		self._previous_err = 0
+		self._integral = 0
+	end
 	function this:process(setpoint, pv)
 		local err = setpoint - pv
 		local p_out = self.kP * err
