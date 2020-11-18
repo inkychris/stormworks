@@ -1,7 +1,7 @@
 -- PID
 -- clamp
 
-min_rps = property.getNumber("Min RPS")
+min_rps = property.getNumber("Clutch RPS")
 clutch_range = property.getNumber("Clutch Range (RPS)")
 
 clutch_pid = PID:Create{
@@ -13,7 +13,7 @@ clutch_pid = PID:Create{
 Channel = {
 	In = {
 		Bool = {Enabled = 1, Reverse = 2},
-		Num = {InputRPS = 1, OutputRPS = 2, TargetRate = 3}
+		Num = {InputRPS = 1, OutputRPS = 4, TargetRate = 2}
 	},
 	Out = {
 		Num = {Clutch = 1},
