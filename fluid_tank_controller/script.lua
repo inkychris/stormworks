@@ -9,7 +9,7 @@ function Tank:Create(start_channel)
     local sc = start_channel
     local this = {
         mode = Mode.Disabled,
-        prev_mode_req = Mode.Disabled,
+        prev_mode_req = nil,
         Channel = {
             Bool = {
                 RequestMode = {Fill = sc, Drain = sc + 1},
@@ -33,23 +33,36 @@ function Tank:Create(start_channel)
         output.setBool(self.Channel.Bool.CurrentMode.Drain, true)
     end
     function this:process()
-        local new_mode = Mode.Disabled
-        if input.getBool(self.Channel.Bool.RequestMode.Fill) then new_mode = Mode.Fill
-        elseif input.getBool(self.Channel.Bool.RequestMode.Drain) then new_mode = Mode.Drain end
+        local mode_req = nil
+        if input.getBool(self.Channel.Bool.RequestMode.Fill) then mode_req = Mode.Fill
+        elseif input.getBool(self.Channel.Bool.RequestMode.Drain) then mode_req = Mode.Drain end
         
-        if new_mode == self.prev_mode_req then return end
-        
-        if new_mode == self.mode then self:disable()
-        elseif new_mode == Mode.Fill then self:fill()
-        elseif new_mode == Mode.Drain then self:drain() end
+        if mode_req and mode_req ~= self.prev_mode_req then
+            if mode_req == self.mode then
+                self.mode = Mode.Disabled
+            else
+                self.mode = mode_req
+            end
+        end
 
-        self.prev_mode_req = self.mode
+        if self.mode == Mode.Fill then
+            self:fill()
+            if input.getNumber(self.Channel.Num.Tank.Level) >= input.getNumber(self.Channel.Num.Tank.Capacity) then
+                self.mode = Mode.Disabled
+            end
+        elseif self.mode == Mode.Drain then
+            self:drain()
+            if input.getNumber(self.Channel.Num.Tank.Level) == 0 then
+                self.mode = Mode.Disabled
+            end
+        end
+
+        self.prev_mode_req = mode_req
     end
     return this
 end
 
-fuel_tank = Tank:Create(1)
-chemical_tank = Tank:Create(16)
+tank = Tank:Create(1)
 
 function onTick()
     for i = 1,32 do
@@ -57,6 +70,5 @@ function onTick()
         output.setNumber(i, 0)
     end
 
-    fuel_tank:process()
-    chemical_tank:process()
+    tank:process()
 end

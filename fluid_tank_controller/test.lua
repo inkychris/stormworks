@@ -9,7 +9,11 @@ function tick()
 end
 
 tick()
-input.setBool(fuel_tank.Channel.Bool.RequestMode.Fill, true)
+input.setBool(tank.Channel.Bool.RequestMode.Fill, true)
 tick()
-input.setBool(fuel_tank.Channel.Bool.RequestMode.Fill, true)
+input.setBool(tank.Channel.Bool.RequestMode.Fill, false)
+tick()
+input.setBool(tank.Channel.Bool.RequestMode.Drain, true)
+tick()
+input.setBool(tank.Channel.Bool.RequestMode.Drain, false)
 tick()
