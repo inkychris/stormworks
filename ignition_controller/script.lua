@@ -4,7 +4,7 @@ channel = {
 	engine_rps = 1,
 	enabled = 1,
 	starter = 2,
-	thermal_protect = 5,
+	thermal_protect = 3,
 }
 
 function onTick()
