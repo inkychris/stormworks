@@ -1,4 +1,4 @@
-dofile "../util/clamp.lua"
+dofile "util/clamp.lua"
 
 Mode = {
     Default = 0,

@@ -1,4 +1,4 @@
-dofile("../util/io_mock.lua")
+dofile("util/io_mock.lua")
 
 property.setNumber("Sunset", 0.75)
 property.setNumber("Sunrise", 0.25)
@@ -10,7 +10,7 @@ property.setNumber("RGB R", 169)
 property.setNumber("RGB G", 67)
 property.setNumber("RGB B", 35)
 
-dofile "script.lua"
+dofile "lighting_controller/script.lua"
 
 input.setBool(Channel.In.Bool.Enabled, true)
 input.setNumber(Channel.In.Num.Rain, 0.21)
