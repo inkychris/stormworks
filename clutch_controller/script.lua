@@ -1,4 +1,6 @@
 clutch_rps = property.getNumber("Clutch RPS")
+full_engage_ratio = property.getNumber("Clutch Engage Ratio")
+clutch_slip = property.getNumber("Clutch Slip")
 
 Channel = {
 	In = {
@@ -24,10 +26,10 @@ function onTick()
 	changing_direction = changing_direction and (output_rps ~= 0)
 	if enabled and (not changing_direction) then
 		if target_rate > 0 then
-			if output_rps > clutch_rps * 0.722 then
+			if output_rps > clutch_rps * full_engage_ratio then
 				result = 1
 			else
-				result = 0.57
+				result = clutch_slip
 			end
 		end
 	end
