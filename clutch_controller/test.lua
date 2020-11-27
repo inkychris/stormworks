@@ -10,6 +10,9 @@ dofile "clutch_controller/script.lua"
 input.setBool(Channel.In.Bool.Enabled, true)
 input.setNumber(Channel.In.Num.TargetRate, 1)
 for i = 1, 16 do
+    if i == 12 then
+        input.setBool(Channel.In.Bool.CutThrottle, true)
+    end
     onTick()
     print(output.getNumber(Channel.Out.Num.Clutch))
     input.setNumber(Channel.In.Num.OutputRPS, i)
