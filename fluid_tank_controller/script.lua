@@ -1,3 +1,5 @@
+dofile "util/fifo/src.lua"
+
 Mode = {
     Disabled = 0,
     Fill = 1,
@@ -17,22 +19,31 @@ function Tank:Create(start_channel)
                 Pump = {Fill = sc + 4, Drain = sc + 5}
             },
             Num = {
-                Valve = sc,
-                Tank = {Level = sc + 1, Capacity = sc + 2}
+                Valve = {Fill = sc, Drain = sc + 1},
+                Tank = {Level = sc + 2, Capacity = sc + 3, Rate = sc + 4}
             }
-        }
+        },
+        level = FIFO:Create(60),
+        prev_level = 0,
     }
+    function this:flow_rate()
+        return (self.level:get(1) - self.level:get(-1)) / self.level.size
+    end
     function this:fill()
-        output.setNumber(self.Channel.Num.Valve, 1)
+        output.setNumber(self.Channel.Num.Valve.Fill, 1)
+        output.setNumber(self.Channel.Num.Tank.Rate, -self:flow_rate())
         output.setBool(self.Channel.Bool.Pump.Fill, true)
         output.setBool(self.Channel.Bool.CurrentMode.Fill, true)
     end
     function this:drain()
-        output.setNumber(self.Channel.Num.Valve, 1)
+        output.setNumber(self.Channel.Num.Valve.Drain, 1)
+        output.setNumber(self.Channel.Num.Tank.Rate, self:flow_rate())
         output.setBool(self.Channel.Bool.Pump.Drain, true)
         output.setBool(self.Channel.Bool.CurrentMode.Drain, true)
     end
     function this:process()
+        local level = input.getNumber(self.Channel.Num.Tank.Level)
+        self.level:push(level)
         local mode_req = nil
         if input.getBool(self.Channel.Bool.RequestMode.Fill) then mode_req = Mode.Fill
         elseif input.getBool(self.Channel.Bool.RequestMode.Drain) then mode_req = Mode.Drain end
@@ -57,7 +68,11 @@ function Tank:Create(start_channel)
             end
         end
 
+        output.setNumber(self.Channel.Num.Tank.Level, level)
+        output.setNumber(self.Channel.Num.Tank.Capacity, input.getNumber(self.Channel.Num.Tank.Capacity))
+
         self.prev_mode_req = mode_req
+        self.prev_level = level
     end
     return this
 end
