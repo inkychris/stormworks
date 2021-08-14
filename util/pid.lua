@@ -19,7 +19,7 @@ function PID:Create(t)
 		self._integral = self._integral + (err / 60)
 		local i_out = self.kI * self._integral
 		local d_out = self.kD * (err - self._previous_err) * 60
-		local result = p_out + i_out - d_out
+		local result = p_out + i_out + d_out
 		if result > self.max then
 			self._integral = self._integral - (err / 60)
 			result = self.max
