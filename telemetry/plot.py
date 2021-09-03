@@ -1,16 +1,10 @@
-import csv
-import plotly.graph_objects as go
+import pandas
+import plotly.express as px
 
-
-def parse_csv(file):
-    x = []
-    y = []
-    with open(file, 'r', newline='') as csvfile:
-        data = csv.reader(csvfile)
-        for row in data:
-            x.append(row[0])
-            y.append(row[1])
-    return x, y
+def main(csv_file):
+    df = pandas.read_csv(csv_file, header=None, names=['index', 'target', 'actual'])
+    fig = px.scatter(data_frame=df, x='index', y=['target', 'actual'])
+    fig.show()
 
 
 if __name__ == '__main__':
@@ -18,9 +12,5 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('file', type=str, help='csv file')
-
     args = parser.parse_args()
-
-    x, y = parse_csv(args.file)
-    fig = go.Figure(data=go.Scatter(x=x, y=y))
-    fig.show()
+    main(args.file)
