@@ -43,7 +43,6 @@ class Logger:
         self._output_dir.mkdir(exist_ok=True, parents=True)
         with open(self._output_dir / f'{self._instance_index}.csv', 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow(['index', 'value'])
             for entry in self._data:
                 writer.writerow(entry)
 
