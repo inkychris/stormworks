@@ -1,15 +1,15 @@
 function Logger(t)
 	local this = {
-		tick = 0,
+		_i = 0,
 		port = t.port or 8000,
 		packet_size = t.packet_size or 16,
 		data = {},
 	}
 	function this:tick()
-		self.tick = self.tick + 1
+		self._i = self._i + 1
 	end
-	function this:log(value)
-		self.data[#self.data + 1] = string.format("%s:%s", tostring(self.tick), tostring(value))
+	function this:log(a)
+		self.data[#self.data + 1] = string.format("%s:%s", tostring(self._i), tostring(a))
 		if #self.data > self.packet_size then
 			self:send()
 		end
