@@ -2,9 +2,9 @@ input = {}
 output = {}
 property = {}
 
-function __print_table(label, table)
+function __print_table(label, table, start, finish)
     io.write(label..": ")
-    for i=1,32 do
+    for i=start or 1, finish or 32 do
         if table[i] == false then io.write("-")
         elseif table[i] == true then io.write("+")
         else io.write(string.format("%1.3f", table[i])) end
@@ -41,7 +41,7 @@ function __init_io_mock(label, table, key_assert)
         table.number[key] = val
     end
     function table.printBool() __print_table(label, table.bool) end
-    function table.printNumber() __print_table(label, table.number) end
+    function table.printNumber(start,finish) __print_table(label, table.number, start, finish) end
 end
 
 __init_io_mock("input", input, __assert_num)
