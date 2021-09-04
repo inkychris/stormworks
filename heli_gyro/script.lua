@@ -1,5 +1,5 @@
 dofile "util/pid.lua"
-dofile "util/control_input/src.lua"
+dofile "util/input_smoothing/src.lua"
 
 Channel = {
 	In = {
@@ -44,13 +44,12 @@ end
 function Axis(label,limit,invert_in,invert_out)
 	polarity=polarity or 1
 	local t={
-		_in=CtlInput(Channel.In.Num[label],pgN(label.." Sensitivity")),
+		_in=Smooth(pgN(label.." Sensitivity")),
 		_ctl_pid=new_pid(label),
 	}
-	function t:tick() self._in:tick() end
 	function t:reset() self._ctl_pid:reset() end
 	function t:write(pv)
-		local r=self._in:smooth()
+		local r=self._in:smooth(igN(Channel.In.Num[label]))
 		if invert_in then r=r*-1 end
 		local out = self._ctl_pid:process(r*limit, pv)
 		if invert_out then out=out*-1 end
@@ -81,7 +80,6 @@ function onTick()
 	for k,_ in pairs(Channel.In.Num) do
 		current[k] = input.getNumber(Channel.In.Num[k])
 	end
-	for _,axis in pairs(axes) do axis:tick() end
 
 	if input.getBool(Channel.In.Bool.active) then
 		axes.r:write(current.roll_tilt)
