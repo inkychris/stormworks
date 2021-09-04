@@ -1,4 +1,4 @@
-function Smooth(sensitivity)
+function PGain(sensitivity)
     local this = {_s=sensitivity,_v=0}
     function this:process(v)
         this._v=this._v+(v-this._v)*(this._s/100)^2
