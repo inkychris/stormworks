@@ -1,5 +1,4 @@
-PID={}
-function PID:Create(t)
+function PID(t)
 	local this={
 		kP=t.kP or 1,
 		kI=t.kI or 0,
