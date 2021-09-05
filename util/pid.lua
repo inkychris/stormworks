@@ -5,6 +5,7 @@ function PID(t)
 		kD=t.kD or 0,
 		min=t.min or 0,
 		max=t.max or 1,
+		offset=t.offset or 0,
 		_preverr=0,
 		_integral=0
 	}
@@ -18,7 +19,7 @@ function PID(t)
 		self._integral=self._integral+(err/60)
 		local i_out=self.kI*self._integral
 		local d_out=self.kD*(err-self._preverr)*60
-		local r=p_out+i_out+d_out
+		local r=p_out+i_out+d_out+self.offset
 		if r>self.max then
 			self._integral=self._integral-(err/60)
 			r=self.max
