@@ -6,11 +6,11 @@ function PID(t)
 		min=t.min or 0,
 		max=t.max or 1,
 		offset=t.offset or 0,
-		_preverr=0,
+		_err=0,
 		_integral=0
 	}
 	function this:reset()
-		self._preverr=0
+		self._err=0
 		self._integral=0
 	end
 	function this:process(setpoint, pv)
@@ -18,7 +18,7 @@ function PID(t)
 		local p_out=self.kP*err
 		self._integral=self._integral+(err/60)
 		local i_out=self.kI*self._integral
-		local d_out=self.kD*(err-self._preverr)*60
+		local d_out=self.kD*(err-self._err)*60
 		local r=p_out+i_out+d_out+self.offset
 		if r>self.max then
 			self._integral=self._integral-(err/60)
@@ -27,7 +27,7 @@ function PID(t)
 			self._integral=self._integral-(err/60)
 			r=self.min
 		end
-		self._preverr=err
+		self._err=err
 		return r
 	end
 	return this
